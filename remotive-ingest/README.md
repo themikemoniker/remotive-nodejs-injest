@@ -1,6 +1,6 @@
 # Remotive Ingest
 
-This project ingests the public Remotive job feed into a Supabase Postgres database and keeps every job's lifecycle history.
+This project ingests the public Remotive job feed (API + RSS), the Remote OK RSS feed, and the We Work Remotely programming RSS feed into a Supabase Postgres database and keeps every job's lifecycle history.
 
 ## Prerequisites
 
@@ -31,11 +31,24 @@ The Remotive public feed can lag behind real-time openings, so avoid polling it 
 cd remotive-ingest
 npm install
 # Update .env with your Supabase credentials (never commit the file)
-# Optional: add REMOTIVE_RSS_FEEDS=https://remotive.com/remote-jobs/feed,https://example.com/custom-feed
+# Optional: override REMOTIVE_RSS_FEEDS, REMOTE_OK_RSS_URL, or WWR_RSS_URL if you need custom feeds
 npm run ingest
 ```
 
-The script automatically loads `.env`, fetches the latest Remotive API snapshot, folds in one or more RSS feeds (defaulting to `https://remotive.com/remote-jobs/feed`), batch upserts through Supabase RPCs, and logs a summary JSON payload. Environment variables are required and the script fails fast when they are absent.
+The script automatically loads `.env`, fetches the latest Remotive API snapshot, folds in one or more Remotive RSS feeds (defaulting to `https://remotive.com/remote-jobs/feed`), fetches the Remote OK RSS feed, pulls the We Work Remotely programming feed, batch upserts each data source through Supabase RPCs, and logs a summary JSON payload. Environment variables are required and the script fails fast when they are absent.
+
+## Sources
+
+| Source | Status | Priority | Blockers / Notes | Proposed Solution |
+| --- | --- | --- | --- | --- |
+| Remotive (API + RSS) | Active | High | N/A | Keep 4× daily ingestion via main script |
+| Remote OK RSS | Active | High | N/A | Already runs 4× daily |
+| We Work Remotely (Programming RSS) | Active | High | N/A | Already runs 4× daily |
+| Jobspresso (Developer RSS) | Planned | Medium | Feed available at `...?feed=rss2`, but needs dedupe rules and monitoring for occasional outages | Add RSS fetch/normalization similar to WWR, keyed on GUID/link |
+| Remote.co (Developer feed) | Blocked | High | Cloudflare managed challenge blocks headless fetches | Request whitelisting or private API credentials, otherwise use browser-based scraper |
+| NoDesk | Blocked | Low | RSS endpoints removed (404) | Build HTML scraper or seek direct API/export |
+| Working Nomads | Blocked | Medium | RSS feed removed; only paid/API options left | Contact for API access or switch to another curated board |
+| Himalayas | Blocked | Medium | API requires bypassing Cloudflare challenge | Request official API token/whitelist before integrating |
 
 ## Data notes
 

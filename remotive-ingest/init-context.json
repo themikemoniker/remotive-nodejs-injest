@@ -1,0 +1,89 @@
+{
+  "environment": {
+    "supabaseUrlEnv": "SUPABASE_URL",
+    "serviceRoleKeyEnv": "SUPABASE_SERVICE_ROLE_KEY",
+    "remotiveRssEnv": "REMOTIVE_RSS_FEEDS",
+    "remoteOkRssEnv": "REMOTE_OK_RSS_URL",
+    "weWorkRemotelyRssEnv": "WWR_RSS_URL",
+    "defaults": {
+      "remotiveFeeds": [
+        "https://remotive.com/remote-jobs/feed"
+      ],
+      "remoteOkFeed": "https://remoteok.com/rss",
+      "weWorkRemotelyFeed": "https://weworkremotely.com/categories/remote-programming-jobs.rss"
+    }
+  },
+  "sources": [
+    {
+      "name": "Remotive",
+      "type": "API + RSS",
+      "status": "active",
+      "priority": "high",
+      "notes": "Deduplicates API snapshot with RSS feed; runs 4x/day via workflow."
+    },
+    {
+      "name": "Remote OK",
+      "type": "RSS",
+      "status": "active",
+      "priority": "high",
+      "notes": "Fetches https://remoteok.com/rss every run; dedupe on guid/link."
+    },
+    {
+      "name": "We Work Remotely (Programming)",
+      "type": "RSS",
+      "status": "active",
+      "priority": "high",
+      "notes": "Fetches programming feed and splits company from title."
+    },
+    {
+      "name": "Jobspresso (Developer)",
+      "type": "RSS",
+      "status": "planned",
+      "priority": "medium",
+      "blockers": "Needs dedupe strategy and feed reliability checks.",
+      "proposedSolution": "Add RSS fetch from https://jobspresso.co/remote-work/job-category/developer/?feed=rss2 when ready."
+    },
+    {
+      "name": "Remote.co (Developer)",
+      "type": "RSS",
+      "status": "blocked",
+      "priority": "high",
+      "blockers": "Cloudflare managed challenge prevents automated fetches.",
+      "proposedSolution": "Request API access or whitelisted IP; fallback to browser-based scraper."
+    },
+    {
+      "name": "NoDesk",
+      "type": "RSS",
+      "status": "blocked",
+      "priority": "low",
+      "blockers": "RSS endpoints removed (404).",
+      "proposedSolution": "Construct HTML scraper or obtain direct export."
+    },
+    {
+      "name": "Working Nomads",
+      "type": "RSS",
+      "status": "blocked",
+      "priority": "medium",
+      "blockers": "Feed removed; API access appears gated.",
+      "proposedSolution": "Contact provider for API credentials or switch sources."
+    },
+    {
+      "name": "Himalayas",
+      "type": "API",
+      "status": "blocked",
+      "priority": "medium",
+      "blockers": "Cloudflare challenge for both API and RSS.",
+      "proposedSolution": "Obtain official API token or whitelisted route."
+    }
+  ],
+  "workflow": {
+    "scheduleUtcCrons": [
+      "10 0 * * *",
+      "10 6 * * *",
+      "10 12 * * *",
+      "10 18 * * *"
+    ],
+    "command": "npm run ingest",
+    "summary": "Each execution fetches all active sources, batch-upserts via RPCs, and marks missing jobs."
+  }
+}
